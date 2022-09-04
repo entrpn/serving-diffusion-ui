@@ -1,3 +1,4 @@
+from functools import partial
 import gradio as gr 
 import time
 import os 
@@ -6,6 +7,7 @@ from io import BytesIO
 import base64
 import re
 import uuid
+import argparse
 
 from frontend import draw_gradio_ui
 from ui_functions import resize_image
@@ -14,11 +16,6 @@ from google.cloud import aiplatform
 
 from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
-
-aip_endpoint_name = ("projects/jfacevedo-demos/locations/us-central1/endpoints/7070220406413590528")
-endpoint = aiplatform.Endpoint(aip_endpoint_name)
-
-
 
 """
 This file is here to play around with the interface without loading the whole model 
@@ -29,8 +26,10 @@ GFPGAN = True
 RealESRGAN = True 
 def run_goBIG():
     pass
-def txt2img(*args, **kwargs):
-    print("this is getting called")
+def txt2img(endpoint_name, *args, **kwargs):
+    print("endpoint_name",endpoint_name)
+    aip_endpoint_name = (endpoint_name)
+    endpoint = aiplatform.Endpoint(aip_endpoint_name)
     print(args)
     print(kwargs)
     #Output should match output_txt2img_gallery, output_txt2img_seed, output_txt2img_params, output_txt2img_stats
@@ -61,7 +60,7 @@ def txt2img(*args, **kwargs):
         }
     parameters = json_format.ParseDict(parameters,Value())
     
-    #results = endpoint.predict(instances=instances,parameters=parameters)
+    results = endpoint.predict(instances=instances,parameters=parameters)
     endpoint_images = results.predictions
     unique_id = str(uuid.uuid4())[:8]
     images = []
@@ -234,25 +233,44 @@ styling = """
 input[type=number]:disabled { -moz-appearance: textfield;+ }
 """
 
-demo = draw_gradio_ui(opt,
-                      user_defaults=user_defaults,
-                      txt2img=txt2img,
-                      img2img=img2img,
-                      txt2img_defaults=txt2img_defaults,
-                      txt2img_toggles=txt2img_toggles,
-                      txt2img_toggle_defaults=txt2img_toggle_defaults,
-                      show_embeddings=hasattr(model, "embedding_manager"),
-                      img2img_defaults=img2img_defaults,
-                      img2img_toggles=img2img_toggles,
-                      img2img_toggle_defaults=img2img_toggle_defaults,
-                      img2img_mask_modes=img2img_mask_modes,
-                      img2img_resize_modes=img2img_resize_modes,
-                      sample_img2img=sample_img2img,
-                      RealESRGAN=RealESRGAN,
-                      GFPGAN=GFPGAN,
-                      run_GFPGAN=run_GFPGAN,
-                      run_RealESRGAN=run_RealESRGAN
-                        )
+def main(args):
 
-# demo.queue()
-demo.launch(share=False, debug=False, auth=('tester','test@12345'),server_name='0.0.0.0', server_port=8080)
+    txt2img_partial = partial(txt2img,args.aip_endpoint_name)
+
+    demo = draw_gradio_ui(opt,
+                        user_defaults=user_defaults,
+                        txt2img=txt2img_partial,
+                        img2img=img2img,
+                        txt2img_defaults=txt2img_defaults,
+                        txt2img_toggles=txt2img_toggles,
+                        txt2img_toggle_defaults=txt2img_toggle_defaults,
+                        show_embeddings=hasattr(model, "embedding_manager"),
+                        img2img_defaults=img2img_defaults,
+                        img2img_toggles=img2img_toggles,
+                        img2img_toggle_defaults=img2img_toggle_defaults,
+                        img2img_mask_modes=img2img_mask_modes,
+                        img2img_resize_modes=img2img_resize_modes,
+                        sample_img2img=sample_img2img,
+                        RealESRGAN=RealESRGAN,
+                        GFPGAN=GFPGAN,
+                        run_GFPGAN=run_GFPGAN,
+                        run_RealESRGAN=run_RealESRGAN
+                            )
+
+    demo.launch(share=False, debug=False, auth=('tester','test@12345'),server_name='0.0.0.0', server_port=args.port)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--port",
+        type=int,
+        help="the gcp project id"
+    )
+    parser.add_argument(
+        "--aip-endpoint-name",
+        type=str,
+        help="vertex endpoint name. Ex: projects/{project_id}/locations/us-central1/endpoints/{endpoint_id}"        
+    )
+    args = parser.parse_args()
+    main(args)
