@@ -1,15 +1,21 @@
 FROM python:3.9-slim
-
-ARG PORT
-
 ENV PYTHONUNBUFFERED True
 
-ENV APP_HOME /app
-WORKDIR $APP_HOME
-COPY . ./
 
+WORKDIR "/serving_diffusion_ui"
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE $PORT
+COPY . ./
+RUN ls -ll
 
-CMD ['python','webui_playground.py'] 
+ARG port
+ARG aip_endpoint_name
+
+
+ENV SERVER_PORT=$port
+ENV AIP_ENDPOINT_NAME=$aip_endpoint_name
+
+EXPOSE $SERVER_PORT
+
+CMD python ./webui_playground.py --port $SERVER_PORT --aip-endpoint-name $AIP_ENDPOINT_NAME

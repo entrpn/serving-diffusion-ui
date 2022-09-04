@@ -64,6 +64,7 @@ def txt2img(endpoint_name, *args, **kwargs):
     endpoint_images = results.predictions
     unique_id = str(uuid.uuid4())[:8]
     images = []
+    os.makedirs("outputs/txt2img-samples",exist_ok=True)
     for i in range(len(endpoint_images)):
         img_path = f"outputs/txt2img-samples/{unique_id}-{i:05}.png"
         with open(img_path, "wb") as fh:
@@ -257,7 +258,7 @@ def main(args):
                         run_RealESRGAN=run_RealESRGAN
                             )
 
-    demo.launch(share=False, debug=False, auth=('tester','test@12345'),server_name='0.0.0.0', server_port=args.port)
+    demo.launch(share=False, debug=False, enable_queue=False, auth=('tester','test@12345'),server_name='0.0.0.0', server_port=args.port)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
