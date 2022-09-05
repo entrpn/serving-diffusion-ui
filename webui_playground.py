@@ -8,6 +8,8 @@ import base64
 import re
 import uuid
 import argparse
+import random
+import sys
 
 from frontend import draw_gradio_ui
 from ui_functions import resize_image
@@ -32,10 +34,15 @@ def txt2img(endpoint_name, *args, **kwargs):
     endpoint = aiplatform.Endpoint(aip_endpoint_name)
     print(args)
     print(kwargs)
+    seed = args[9]
+    if seed == '':
+        seed = random.randint(0, 6000000)
+    seed = int(seed)
+    print('seed:',seed)
     #Output should match output_txt2img_gallery, output_txt2img_seed, output_txt2img_params, output_txt2img_stats
     # info = f"""{args[0]} --seed {args[9]} --W {args[11]} --H {args[10]} -s {args[1]} -C {float(args[8])} --sampler {args[2]}  """.strip()
     args_and_names = {
-        "seed": int(args[9]),
+        "seed": seed,
         "width": args[11],
         "height": args[10],
         "steps": args[1],
@@ -53,7 +60,7 @@ def txt2img(endpoint_name, *args, **kwargs):
     
     parameters = {
         'scale' : args[8], 
-        'seed' : args[9], 
+        'seed' : seed, 
         'W' : args[11], 
         'H' : args[10], 
         'ddim_steps' : args[1],
@@ -76,10 +83,6 @@ def txt2img(endpoint_name, *args, **kwargs):
         'text': full_string,
         'entities': [{'entity':str(v), 'start': full_string.find(f"{k}:"),'end': full_string.find(f"{k}:") + len(f"{k} ")} for k,v in args_and_names.items()]
      }
-    #images = []
-    #for i in range(args[6]):
-    #    images.append(f"http://placeimg.com/{args[11]}/{args[10]}/any")
-    #images = ["imageToSave.png"]
     return images, int(time.time()) , info, 'random output'
 def img2img(*args, **kwargs):
     images = [

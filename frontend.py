@@ -29,9 +29,8 @@ def draw_gradio_ui(opt, img2img=lambda x: x, txt2img=lambda x: x,imgproc=lambda 
                         txt2img_cfg = gr.Slider(minimum=-40.0, maximum=30.0, step=0.5,
                                                 label='Classifier Free Guidance Scale (how strongly the image should follow the prompt)',
                                                 value=txt2img_defaults['cfg_scale'], elem_id='cfg_slider')
-                        txt2img_seed = gr.Textbox(label="Seed", lines=1, max_lines=1,
-                                                  value=txt2img_defaults["seed"], interactive=False)
-                        #txt2img_seed = 42
+                        txt2img_seed = gr.Textbox(label="Seed (blank to randomize)", lines=1, max_lines=1,
+                                                  value=txt2img_defaults["seed"], interactive=True)
                         txt2img_batch_count = gr.Slider(minimum=1, maximum=2, step=1,
                                                         label='Number of images to generate',
                                                         value=txt2img_defaults['n_iter'], interactive=True)
@@ -58,9 +57,9 @@ def draw_gradio_ui(opt, img2img=lambda x: x, txt2img=lambda x: x,imgproc=lambda 
                                     _js=js_copy_txt2img_output,
                                      fn=None, show_progress=False)
                                 output_txt2img_seed = gr.Number(label='Seed', interactive=False, visible=False)
-                                output_txt2img_copy_seed = gr.Button("Copy only seed").click(
-                                    inputs=[output_txt2img_seed], outputs=[],
-                                    _js='(x) => navigator.clipboard.writeText(x)', fn=None, show_progress=False)
+                                # output_txt2img_copy_seed = gr.Button("Copy only seed").click(
+                                #     inputs=[output_txt2img_seed], outputs=[],
+                                #     _js='(x) => navigator.clipboard.writeText(x)', fn=None, show_progress=False)
                             output_txt2img_stats = gr.HTML(label='Stats')
                     with gr.Column():
 
