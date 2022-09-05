@@ -22,19 +22,19 @@ def draw_gradio_ui(opt, img2img=lambda x: x, txt2img=lambda x: x,imgproc=lambda 
 
                 with gr.Row(elem_id='body').style(equal_height=False):
                     with gr.Column():
-                        txt2img_width = gr.Slider(minimum=64, maximum=1024, step=64, label="Width",
-                                                  value=txt2img_defaults["width"], interactive=False)
-                        txt2img_height = gr.Slider(minimum=64, maximum=1024, step=64, label="Height",
-                                                   value=txt2img_defaults["height"], interactive=False)
+                        txt2img_width = gr.Slider(minimum=64, maximum=512, step=64, label="Width",
+                                                  value=txt2img_defaults["width"], interactive=True)
+                        txt2img_height = gr.Slider(minimum=64, maximum=512, step=64, label="Height",
+                                                   value=txt2img_defaults["height"], interactive=True)
                         txt2img_cfg = gr.Slider(minimum=-40.0, maximum=30.0, step=0.5,
                                                 label='Classifier Free Guidance Scale (how strongly the image should follow the prompt)',
                                                 value=txt2img_defaults['cfg_scale'], elem_id='cfg_slider')
                         txt2img_seed = gr.Textbox(label="Seed", lines=1, max_lines=1,
                                                   value=txt2img_defaults["seed"], interactive=False)
                         #txt2img_seed = 42
-                        txt2img_batch_count = gr.Slider(minimum=4, maximum=4, step=1,
+                        txt2img_batch_count = gr.Slider(minimum=1, maximum=2, step=1,
                                                         label='Number of images to generate',
-                                                        value=txt2img_defaults['n_iter'], interactive=False)
+                                                        value=txt2img_defaults['n_iter'], interactive=True)
 
                         txt2img_dimensions_info_text_box = gr.Textbox(label="Aspect ratio (4:3 = 1.333 | 16:9 = 1.777 | 21:9 = 2.333)")
                     with gr.Column():
@@ -64,8 +64,8 @@ def draw_gradio_ui(opt, img2img=lambda x: x, txt2img=lambda x: x,imgproc=lambda 
                             output_txt2img_stats = gr.HTML(label='Stats')
                     with gr.Column():
 
-                        txt2img_steps = gr.Slider(minimum=1, maximum=250, step=1, label="Sampling Steps",
-                                                  value=txt2img_defaults['ddim_steps'], interactive=False)
+                        txt2img_steps = gr.Slider(minimum=1, maximum=50, step=1, label="Sampling Steps",
+                                                  value=txt2img_defaults['ddim_steps'], interactive=True)
                         txt2img_sampling = gr.Dropdown(label='Sampling method (k_lms is default k-diffusion sampler)',
                                                        choices=["DDIM", "PLMS", 'k_dpm_2_a', 'k_dpm_2', 'k_euler_a',
                                                                 'k_euler', 'k_heun', 'k_lms'],

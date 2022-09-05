@@ -52,11 +52,13 @@ def txt2img(endpoint_name, *args, **kwargs):
     instances = [json_format.ParseDict(s, Value()) for s in instances_list]
     
     parameters = {
-        "scale" : 7.5, 
-        "seed" : args[9], 
-        "width" : args[11], 
-        "height" : args[10], 
-        "ddim_steps" : args[1]
+        'scale' : args[8], 
+        'seed' : args[9], 
+        'W' : args[11], 
+        'H' : args[10], 
+        'ddim_steps' : args[1],
+        'n_samples' : args[7],
+        'n_iter' : args[6]
         }
     parameters = json_format.ParseDict(parameters,Value())
     
