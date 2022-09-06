@@ -1,3 +1,5 @@
+# Serving Diffusion UI
+![](images/stable_diffusion_ui.png)
 ## Setup
 
 **Note** I added an auth layer, which you can change or remove. It is located at the end of the file `webui_playground.py`, in `demo.launch()` method.
