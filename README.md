@@ -1,3 +1,6 @@
+# Serving Diffusion UI
+![Serving Diffusion UI](images/serving_diffusion_ui.png)
+
 ## Setup
 
 **Note** I added an auth layer, which you can change or remove. It is located at the end of the file `webui_playground.py`, in `demo.launch()` method.
@@ -12,10 +15,10 @@
     ```bash
     docker push gcr.io/{project_id}/serving-diffusion-ui:latest
     ```
-1. Deploy image to cloud run
+1. Deploy image to cloud run.
 
     ```bash
-    gcloud run deploy --port 80 --region us-central1 serving-diffusion-ui --image gcr.io/{project_id}/serving-diffusion-ui:latest
+    gcloud run deploy --port 80 --region us-central1 serving-diffusion-ui --image gcr.io/{project_id}/serving-diffusion-ui:latest --timeout 3600 ----no-cpu-throttling --cpu=8 --memory 8Gi
     ```
 
     When this is deployed, you'll get a URL where you can access the webui. Make the url public by following [this link](https://cloud.google.com/run/docs/securing/managing-access#making_a_service_public)

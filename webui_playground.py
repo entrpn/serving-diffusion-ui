@@ -271,7 +271,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--port",
         type=int,
-        help="the gcp project id"
+        help="port to run the gradio app"
     )
     parser.add_argument(
         "--aip-endpoint-name",
