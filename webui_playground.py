@@ -263,7 +263,12 @@ def main(args):
                         run_RealESRGAN=run_RealESRGAN
                             )
 
-    demo.launch(share=False, debug=False, enable_queue=False, auth=('tester','test@12345'),server_name='0.0.0.0', server_port=args.port)
+    demo.launch(share=False, 
+        debug=False, 
+        enable_queue=False, 
+        auth=('tester','test@12345'),
+        server_name='0.0.0.0', 
+        server_port=args.port)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
