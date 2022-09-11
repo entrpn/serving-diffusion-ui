@@ -2,14 +2,13 @@ from functools import partial
 import gradio as gr 
 import time
 import os 
-from PIL import Image, ImageFont, ImageDraw, ImageFilter, ImageOps
 from io import BytesIO
 import base64
-import re
 import uuid
 import argparse
 import random
 import sys
+import json
 
 from frontend import draw_gradio_ui
 from ui_functions import resize_image
@@ -18,6 +17,25 @@ from google.cloud import aiplatform
 
 from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
+
+# Convert Image to Base64 
+def im_2_b64(image):
+    buff = BytesIO()
+    image.save(buff, format="PNG", compress_level=9)
+    img_str = base64.b64encode(buff.getvalue())
+    return img_str
+
+def get_images_from_results(results):
+    endpoint_images = results.predictions
+    unique_id = str(uuid.uuid4())[:8]
+    images = []
+    os.makedirs("outputs/txt2img-samples",exist_ok=True)
+    for i in range(len(endpoint_images)):
+        img_path = f"outputs/txt2img-samples/{unique_id}-{i:05}.png"
+        with open(img_path, "wb") as fh:
+            fh.write(base64.b64decode(endpoint_images[i]))
+        images.append(img_path)
+    return images
 
 """
 This file is here to play around with the interface without loading the whole model 
@@ -49,13 +67,14 @@ def txt2img(endpoint_name, *args, **kwargs):
         "cfg_scale": str(args[8]),
         "sampler": args[2],
         'n_iter' : args[6],
-        'n_samples' : args[7]
+        'n_samples' : args[7],
+        'type' : 'txt2img'
     }
 
     print("steps",args[1])
     
     full_string = f"{args[0]}\n"+ " ".join([f"{k}:" for k,v in args_and_names.items()])
-    instances_list = [{"prompt": full_string}]
+    instances_list = [{"prompt": args[0]}]
     instances = [json_format.ParseDict(s, Value()) for s in instances_list]
     
     parameters = {
@@ -65,33 +84,52 @@ def txt2img(endpoint_name, *args, **kwargs):
         'H' : args[10], 
         'ddim_steps' : args[1],
         'n_samples' : args[7],
-        'n_iter' : args[6]
+        'n_iter' : args[6],
+        'type' : 'txt2img'
         }
+    print(parameters)
     parameters = json_format.ParseDict(parameters,Value())
     
     results = endpoint.predict(instances=instances,parameters=parameters)
-    endpoint_images = results.predictions
-    unique_id = str(uuid.uuid4())[:8]
-    images = []
-    os.makedirs("outputs/txt2img-samples",exist_ok=True)
-    for i in range(len(endpoint_images)):
-        img_path = f"outputs/txt2img-samples/{unique_id}-{i:05}.png"
-        with open(img_path, "wb") as fh:
-            fh.write(base64.b64decode(endpoint_images[i]))
-        images.append(img_path)
+    images = get_images_from_results(results)
     info = {
         'text': full_string,
         'entities': [{'entity':str(v), 'start': full_string.find(f"{k}:"),'end': full_string.find(f"{k}:") + len(f"{k} ")} for k,v in args_and_names.items()]
      }
     return images, int(time.time()) , info, 'random output'
-def img2img(*args, **kwargs):
-    images = [
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",
-    "https://images.unsplash.com/photo-1554151228-14d9def656e4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=386&q=80",
-    "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBmYWNlfGVufDB8fDB8fA%3D%3D&w=1000&q=80",
-    "https://images.unsplash.com/photo-1546456073-92b9f0a8d413?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",
-    "https://images.unsplash.com/photo-1601412436009-d964bd02edbc?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80",
-    ]
+def img2img(endpoint_name, *args, **kwargs):
+    print(args)
+    prompt = args[0]
+    aip_endpoint_name = (endpoint_name)
+    endpoint = aiplatform.Endpoint(aip_endpoint_name)
+    seed = args[12]
+    if seed == '':
+        seed = random.randint(0, 6000000)
+    seed = int(seed)
+    print('seed:',seed)
+
+    parameters = {
+        'strength' : args[11],
+        'seed' : seed,
+        'W' : args[14],
+        'H' : args[13],
+        'ddim_steps' : args[5],
+        'type' : 'img2img',
+        'n_iter' : args[9],
+        'n_samples' : 2,
+        'scale' : args[10]
+    }
+
+    base64_image = im_2_b64(args[2]).decode('utf-8')
+
+    instances_list = [{'prompt' : prompt, 'image' : base64_image}]
+    with open("instances.json",'w') as f:
+        f.write(json.dumps(instances_list))
+    instances = [json_format.ParseDict(s, Value()) for s in instances_list]
+    parameters = json_format.ParseDict(parameters,Value())
+    results = endpoint.predict(instances=instances,parameters=parameters)
+
+    images = get_images_from_results(results)
     return images, 1234, 'random', 'random'
 
 def run_GFPGAN(*args, **kwargs):
@@ -152,7 +190,7 @@ txt2img_defaults = {
     'n_iter': 2,
     'batch_size': 2,
     'cfg_scale': 7.5,
-    'seed': '42',
+    'seed': '',
     'height': 512,
     'width': 512,
     'fp': None,
@@ -242,11 +280,12 @@ input[type=number]:disabled { -moz-appearance: textfield;+ }
 def main(args):
 
     txt2img_partial = partial(txt2img,args.aip_endpoint_name)
+    img2img_partial = partial(img2img,args.aip_endpoint_name)
 
     demo = draw_gradio_ui(opt,
                         user_defaults=user_defaults,
                         txt2img=txt2img_partial,
-                        img2img=img2img,
+                        img2img=img2img_partial,
                         txt2img_defaults=txt2img_defaults,
                         txt2img_toggles=txt2img_toggles,
                         txt2img_toggle_defaults=txt2img_toggle_defaults,
