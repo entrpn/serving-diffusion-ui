@@ -31,10 +31,11 @@ def get_images_from_results(results):
     images = []
     os.makedirs("outputs/txt2img-samples",exist_ok=True)
     for i in range(len(endpoint_images)):
-        img_path = f"outputs/txt2img-samples/{unique_id}-{i:05}.png"
-        with open(img_path, "wb") as fh:
-            fh.write(base64.b64decode(endpoint_images[i]))
-        images.append(img_path)
+        for k in range(len(endpoint_images[i]["images"])):
+            img_path = f"outputs/txt2img-samples/{unique_id}-{i+k:05}.png"
+            with open(img_path, "wb") as fh:
+                fh.write(base64.b64decode(endpoint_images[i]["images"][k]))
+            images.append(img_path)
     return images
 
 """
