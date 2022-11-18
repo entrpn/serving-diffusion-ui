@@ -59,6 +59,18 @@ def txt2img(endpoint_name, *args, **kwargs):
     print('seed:',seed)
     #Output should match output_txt2img_gallery, output_txt2img_seed, output_txt2img_params, output_txt2img_stats
     # info = f"""{args[0]} --seed {args[9]} --W {args[11]} --H {args[10]} -s {args[1]} -C {float(args[8])} --sampler {args[2]}  """.strip()
+
+    {
+            "prompt" : "a photo of eggs and (((bacon))) on a frying pan",
+            "parameters": {
+                "ddim_steps" : 30,
+                "scale" : 7.5,
+                "n_samples" : 2,
+                "n_itter" : 2,
+                "type" : "txt2img"
+            }
+        }
+
     args_and_names = {
         "seed": seed,
         "width": args[11],
@@ -74,7 +86,17 @@ def txt2img(endpoint_name, *args, **kwargs):
     print("steps",args[1])
     
     full_string = f"{args[0]}\n"+ " ".join([f"{k}:" for k,v in args_and_names.items()])
-    instances_list = [{"prompt": args[0]}]
+    instances_list = [{"prompt": args[0], 
+        "parameters" : {
+            'scale' : args[8], 
+            'seed' : seed, 
+            'W' : args[11], 
+            'H' : args[10], 
+            'ddim_steps' : args[1],
+            'n_samples' : args[7],
+            'n_iter' : args[6],
+            'type' : 'txt2img'
+        }}]
     instances = [json_format.ParseDict(s, Value()) for s in instances_list]
     
     parameters = {
